@@ -15,7 +15,7 @@ SSH into the StartOS server, then download a named release archive and its
 checksum from this project's GitHub Releases page:
 
 ```sh
-RELEASE=v0.3.1
+RELEASE=v0.3.2
 ASSET="cryptpad-recovery-${RELEASE#v}-linux-x64.tar.gz"
 BASE_URL="https://github.com/JesseMarkowitz/cryptpad-recovery/releases/download"
 curl -fLO "$BASE_URL/$RELEASE/$ASSET"
@@ -35,11 +35,17 @@ Run the utility without `sudo` first:
 ./cryptpad-recover
 ```
 
-It uses this StartOS 0.3.5.1 CryptPad data directory by default:
+With no `--data` flag it tries the CryptPad data directory for each known
+StartOS release, newest first, and uses the first one that actually exists:
 
 ```text
-/embassy-data/package-data/volumes/cryptpad/data
+/media/startos/data/package-data/volumes/cryptpad/data   (StartOS 0.4.0+)
+/embassy-data/package-data/volumes/cryptpad/data          (StartOS 0.3.5.1 and earlier)
 ```
+
+If your StartOS version relocates this path again, or the account's data was
+copied somewhere else, pass `--data` explicitly rather than relying on
+auto-detection.
 
 The utility prompts for the CryptPad username and password. Neither credential
 is accepted as a command-line argument. The password is not echoed, retained,

@@ -1,9 +1,12 @@
 # CryptPad recovery
 
 This workspace contains a verified offline recovery utility for the CryptPad
-5.1.0 package installed on the StartOS 0.3.5.1 test server. The intended Phase
-7 deployment is a self-contained command-line bundle downloaded from GitHub
-and run over SSH. It is explicitly not an `.s9pk` or StartOS service.
+5.1.0 package installed on a StartOS test server, target-host acceptance
+tested on StartOS 0.3.5.1; StartOS 0.4.0 support is implemented (its
+relocated data-volume path is auto-detected) but not yet acceptance tested.
+The intended Phase 7 deployment is a self-contained command-line bundle
+downloaded from GitHub and run over SSH. It is explicitly not an `.s9pk` or
+StartOS service.
 
 The recovery utility can:
 
@@ -177,6 +180,14 @@ in v0.3.1: two drive items sharing an identical title collided on the same
 recovery output path, and the second failed with `OUTPUT_ALREADY_EXISTS`.
 `enumerateDrive` now disambiguates every group of same-path items by their
 stable drive element id.
+
+v0.3.2 adds StartOS 0.4.0 support: its CryptPad data volume moved from
+`/embassy-data/...` to `/media/startos/data/...`, confirmed by inspecting the
+0.4.0-upgraded test server's filesystem directly. The default data-root
+resolution now tries each known StartOS layout and uses whichever is
+actually present, so an upgraded host does not need `--data` passed
+manually. This has not yet had a full target-host acceptance run against
+real account data on the upgraded server.
 
 `RESEARCH.md` contains the full source and cryptographic analysis. Shared-folder,
 team, archive, and damaged-history recovery remain later engineering stages.

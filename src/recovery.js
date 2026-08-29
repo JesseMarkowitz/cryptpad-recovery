@@ -38,6 +38,34 @@ function allocateBlockKeys(derivedBytes) {
     };
 }
 
+// The CryptPad package's persistent-volume mount point has moved across
+// StartOS releases even though the volume's own internal layout (block/,
+// datastore/, blob/) has not. Newest first: StartOS 0.4.0 moved package data
+// under /media/startos/data; 0.3.5.1 and earlier used /embassy-data.
+const DEFAULT_DATA_ROOTS = [
+    { path: '/media/startos/data/package-data/volumes/cryptpad/data', label: 'startos-0.4.0' },
+    { path: '/embassy-data/package-data/volumes/cryptpad/data', label: 'startos-0.3.5.1' },
+];
+
+function looksLikeCryptPadDataRoot(root) {
+    return ['block', 'datastore', 'blob'].every((store) => {
+        try {
+            return fs.statSync(path.join(root, store)).isDirectory();
+        } catch (_) {
+            return false;
+        }
+    });
+}
+
+// Returns the first candidate whose volume layout is actually present, so a
+// StartOS upgrade that relocates the mount point does not require a manual
+// --data override. Falls back to the newest-known candidate (rather than
+// throwing) so a missing path still surfaces as a normal, diagnosable
+// ACCOUNT_BLOCK_NOT_FOUND / ENOENT failure instead of an upfront guess error.
+function resolveDefaultDataRoot(candidates = DEFAULT_DATA_ROOTS) {
+    return candidates.find((candidate) => looksLikeCryptPadDataRoot(candidate.path)) || candidates[0];
+}
+
 function locateBlock(dataRoot, blockKeys) {
     const publicKey = safeAccountPublicKey(blockKeys.sign.publicKey);
     return path.join(path.resolve(dataRoot), 'block', publicKey.slice(0, 2), publicKey);
@@ -449,6 +477,8 @@ function recoverUploadedFile(dataRoot, entry) {
 
 module.exports = {
     VENDOR_ROOT,
+    DEFAULT_DATA_ROOTS,
+    resolveDefaultDataRoot,
     deriveBytes,
     allocateBlockKeys,
     locateBlock,

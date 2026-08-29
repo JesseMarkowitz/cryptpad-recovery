@@ -1003,3 +1003,39 @@ encrypted fixture.
 Re-verification: the v0.3.1 release archive was run against the same account
 on the same test server. All 5 drive items recovered, including both
 same-titled Pads, with 0 failed and 0 skipped.
+
+## 16. StartOS 0.4.0 relocates the CryptPad data volume
+
+Validation date: 2026-08-29. The real end user this tool is for had already
+upgraded their server past 0.3.5.1 by the time recovery was needed, so
+`shoddy-cradles` was upgraded from StartOS 0.3.5.1 to 0.4.0.1 to match.
+
+Confirmed by SSH onto the upgraded host and inspecting its filesystem
+directly (not from documentation or memory): `/embassy-data` no longer
+exists under 0.4.0.1. `start-cli package list` still reports the installed
+`cryptpad` package at `5.1.0:0`, and `sudo find / -iname package-data`
+located its persistent volumes under a new mount point:
+
+```text
+/media/startos/data/package-data/volumes/cryptpad/data
+```
+
+The CryptPad-internal layout under that root is unchanged from 0.3.5.1 —
+`block/`, `datastore/`, `blob/`, `datastore` fan-out by two-character hex
+prefix, `.version` reading `5.1.0:0` — only the StartOS-side mount point
+moved. The directory tree is owned `root:root` but world-readable (`o+rx`),
+so the unprivileged `start9` SSH user (which is what the recovery utility
+runs as) can read it without `sudo`, matching the same access model as the
+old `/embassy-data` path.
+
+Fix: `resolveDefaultDataRoot` (`src/recovery.js`) now holds an ordered list
+of known StartOS data-volume paths, newest first, and returns the first one
+whose `block`/`datastore`/`blob` subdirectories actually exist on disk. The
+CLI only falls back to a hardcoded default when no candidate is present, and
+records which one (if any) was auto-selected in the support log as
+`dataRootDefaultLabel` for diagnosability. `--data` still overrides
+auto-detection entirely and skips the probe.
+
+Not yet done: an actual recovery run against real account data on the
+upgraded 0.4.0.1 host. This section only establishes where the data lives
+now, not that recovery still completes successfully against it end to end.

@@ -12,18 +12,19 @@ const {
     enumerateDrive,
     recoverDocument,
     recoverUploadedFile,
+    DEFAULT_DATA_ROOTS,
+    resolveDefaultDataRoot,
 } = require('../src/recovery');
 const { exportDocument } = require('../src/exporters');
 const { SupportLog, errorCode } = require('../src/support-log');
-
-const DEFAULT_DATA_ROOT = '/embassy-data/package-data/volumes/cryptpad/data';
 
 function usage(stream = process.stdout) {
     stream.write([
         'Usage: cryptpad-recover [--data DATA_ROOT] [--output DIRECTORY] [--no-archive]',
         '',
         'CryptPad username and password are always read from prompts, never arguments.',
-        `Default encrypted data: ${DEFAULT_DATA_ROOT}`,
+        'Default encrypted data (first present wins):',
+        ...DEFAULT_DATA_ROOTS.map((candidate) => `  ${candidate.path}  (${candidate.label})`),
         'Default output: a new timestamped directory in the current directory.',
         '',
     ].join('\n'));
@@ -248,7 +249,8 @@ async function main() {
         return;
     }
 
-    const dataRoot = path.resolve(options.data || DEFAULT_DATA_ROOT);
+    const defaultDataRoot = options.data ? null : resolveDefaultDataRoot();
+    const dataRoot = path.resolve(options.data || defaultDataRoot.path);
     const outputBase = path.resolve(options.output || process.cwd());
     const sessionRoot = options.output ? outputBase : path.join(outputBase, sessionName());
     const filesRoot = path.join(sessionRoot, 'recovered-files');
@@ -270,6 +272,7 @@ async function main() {
         log.event('environment.inspect', {
             startOsVersion: readStartOsVersion(),
             dataRootKind: options.data ? 'custom' : 'startos-default',
+            dataRootDefaultLabel: defaultDataRoot && defaultDataRoot.label,
             outputKind: options.output ? 'custom' : 'timestamped-default',
             stores: inspectDataRoot(dataRoot),
         });

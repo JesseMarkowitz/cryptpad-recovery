@@ -3,6 +3,7 @@
 const assert = require('assert');
 const crypto = require('crypto');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const test = require('node:test');
 const {
@@ -13,11 +14,16 @@ const {
     recoverDocument,
     recoverCodeDocument,
     recoverUploadedFile,
+    resolveDefaultDataRoot,
 } = require('../src/recovery');
 const { exportDocument } = require('../src/exporters');
 
 const DATA_ROOT = path.resolve(__dirname, '..', 'testdata', 'encrypted-phase4');
 const EXPECTED_ROOT = path.resolve(__dirname, '..', 'fixtures', 'expected');
+
+function makeCryptPadDataRoot(root) {
+    ['block', 'datastore', 'blob'].forEach((store) => fs.mkdirSync(path.join(root, store), { recursive: true }));
+}
 const USERNAME = 'recovery-fixture-20260828';
 
 test('application replay modes match the CryptPad 5.1.0 frameworks', () => {
@@ -47,6 +53,29 @@ test('enumerateDrive disambiguates duplicate drive titles', () => {
     assert.strictEqual(byId.get('5'), 'Untitled');
     assert.strictEqual(byId.get('10'), 'Untitled (10)');
     assert.strictEqual(byId.get('7'), 'Unique');
+});
+
+test('resolveDefaultDataRoot picks the first present StartOS volume layout', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cryptpad-default-root-test-'));
+    const newRoot = path.join(root, 'startos-0.4.0');
+    const oldRoot = path.join(root, 'startos-0.3.5.1');
+    const candidates = [
+        { path: newRoot, label: 'startos-0.4.0' },
+        { path: oldRoot, label: 'startos-0.3.5.1' },
+    ];
+
+    // Neither candidate present: falls back to the newest-known candidate
+    // rather than throwing, so the failure still surfaces later as a normal,
+    // diagnosable recovery error instead of an upfront path guess error.
+    assert.strictEqual(resolveDefaultDataRoot(candidates), candidates[0]);
+
+    makeCryptPadDataRoot(oldRoot);
+    assert.strictEqual(resolveDefaultDataRoot(candidates), candidates[1]);
+
+    makeCryptPadDataRoot(newRoot);
+    assert.strictEqual(resolveDefaultDataRoot(candidates), candidates[0]);
+
+    fs.rmSync(root, { recursive: true, force: true });
 });
 
 test('offline account, drive, and Code recovery', { skip: !process.env.CRYPTPAD_TEST_PASSWORD }, async () => {
