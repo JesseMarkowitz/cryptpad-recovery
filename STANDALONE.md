@@ -15,7 +15,7 @@ SSH into the StartOS server, then download a named release archive and its
 checksum from this project's GitHub Releases page:
 
 ```sh
-RELEASE=v0.2.0
+RELEASE=v0.3.0
 ASSET="cryptpad-recovery-${RELEASE#v}-linux-x64.tar.gz"
 BASE_URL="https://github.com/JesseMarkowitz/cryptpad-recovery/releases/download"
 curl -fLO "$BASE_URL/$RELEASE/$ASSET"
@@ -107,7 +107,14 @@ line is one JSON object.
 
 ## Current format limitations
 
-This release recovers CryptPad Code documents as text and uploaded files in
-their original bytes. Other app types, shared folders, teams, legacy account
-fallback, and damaged/archive histories are still under development. Unsupported
-items are counted and reported without exposing their names in the support log.
+This release recovers Code as text, Pad as safe HTML, Slide as Markdown,
+Kanban as JSON, Poll as CSV, Whiteboard as Fabric JSON, and uploaded files in
+their original bytes. Every replayed document also receives a raw
+`.cryptpad.json` sidecar.
+
+CryptPad Sheet, Document, and Presentation edits are stored as OnlyOffice
+binary change records. Recovery authenticates and preserves those records in
+`.onlyoffice-history.json`; it does not yet render them to `.xlsx`, `.docx`, or
+`.pptx`. Form, Calendar, and other replayable applications currently receive
+raw-state exports. Shared folders, teams, legacy account fallback, and
+damaged/archive histories remain under development.

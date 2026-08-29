@@ -42,7 +42,7 @@ test('standalone CLI log excludes fixture credentials, names, data, and capabili
     const username = 'recovery-fixture-20260828';
     const result = childProcess.spawnSync(process.execPath, [
         path.resolve(__dirname, '..', 'bin', 'cryptpad-recover.js'),
-        '--data', path.resolve(__dirname, '..', 'testdata', 'encrypted-phase5'),
+        '--data', path.resolve(__dirname, '..', 'testdata', 'encrypted-phase6'),
         '--output', output,
         '--no-archive',
     ], {
@@ -60,13 +60,22 @@ test('standalone CLI log excludes fixture credentials, names, data, and capabili
         'recovery-canary-unicode.md',
         'recovery-canary-long.txt',
         'recovery-canary-binary.bin',
+        'recovery-canary-kanban',
+        'recovery-canary-rich-text',
+        'recovery-canary-rich-text-phase6',
+        'recovery-canary-sheet',
+        'recovery-canary-slides',
         'RECOVERY-FIXTURE-SHORT',
+        'RECOVERY-FIXTURE-BOARD',
+        'RECOVERY-FIXTURE-RICH-TEXT',
         'ddab0eb00ef95debe7de77440fe425d0',
         '47fa80fe5b7b6d8f4964061efddc45cfb5be91b7e4635e19',
+        'ed40473126148ba4384062c11b7ce2e3',
     ];
     forbidden.forEach((value) => assert.ok(!contents.includes(value), `support log leaked ${value}`));
     assert.ok(contents.includes('item.recover'));
     assert.ok(contents.includes('verifiedMessages'));
+    assert.ok(contents.includes('verifiedSecondaryMessages'));
     assert.ok(contents.includes('verifiedChunks'));
     fs.rmSync(root, { recursive: true, force: true });
 });

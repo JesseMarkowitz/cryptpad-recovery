@@ -10,8 +10,9 @@ the Phase 1 observation before these fixtures were added.
 
 ## Status and evidence labels
 
-This document records Phase 1 reconnaissance only. No recovery utility has been
-built and no user data has been modified.
+This document began as Phase 1 reconnaissance. Sections 12–14 record the later
+implemented and empirically validated recovery phases. Test-only CryptPad data
+was created through the normal browser UI; production data was not modified.
 
 The source-level recovery path is technically credible: the account password
 does not encrypt documents directly. It deterministically locates and decrypts
@@ -943,5 +944,37 @@ contains no password, username, user filename, fixture content, absolute data or
 output path, channel/blob/block identifier, capability, or key. The recovered
 file archive is explicitly excluded from support requests.
 
-GitHub repository creation and first release publication remain external
-release steps; target-host acceptance of the bundle itself has passed.
+The GitHub repository and v0.2.0 release were subsequently published;
+target-host acceptance of that bundle passed.
+
+## 14. Phase 6 broader application recovery
+
+Validation date: 2026-08-29. Real Pad, Slide, Kanban, and Sheet fixtures were
+created with the CryptPad 5.1.0 browser client and captured as an encrypted,
+read-only regression snapshot.
+
+The application replay transformer must match the historical framework:
+Pad and Whiteboard use ChainPad's NaiveJSON transformer; the ordinary app
+framework uses SmartJSON; Poll and Calendar additionally start from an explicit
+empty object. Starting Pad from `{}` was empirically incorrect, while starting
+from the empty string reconstructed its HyperJSON state exactly.
+
+Phase 6 adds useful adapters for Code text, Pad safe HTML, Slide Markdown,
+Kanban JSON, Poll CSV, and Whiteboard Fabric JSON. Every app also retains its
+complete replayed state in a `.cryptpad.json` sidecar, so an imperfect
+presentation adapter does not discard authenticated data.
+
+OnlyOffice-backed Sheet, Document, and Presentation use two histories. The
+primary ChainPad state holds metadata plus a random secondary channel. That
+secondary channel is encrypted with the primary document secret and contains
+authenticated `saveChanges` JSON messages whose `change` fields are opaque
+OnlyOffice binary patches. The recovery utility now verifies every secondary
+message and preserves its plaintext exactly in
+`.onlyoffice-history.json`. Native Office rendering still requires a compatible
+OnlyOffice conversion/replay runtime and is not claimed by this phase.
+
+Regression coverage proves exact rich-text HTML and Slide Markdown, semantic
+Kanban content, and authenticated preservation of a real Sheet secondary edit
+history. Live UI fixtures for Poll, Whiteboard, Form, Calendar, Document, and
+Presentation remain future coverage work even though their replay/raw export
+paths are implemented from the verified 5.1.0 source behavior.

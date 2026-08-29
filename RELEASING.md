@@ -11,7 +11,7 @@ not committed.
    archive on the StartOS test host.
 4. Push `main`.
 5. Create and push an annotated version tag matching `package.json`, for
-   example `v0.2.0`.
+   example `v0.3.0`.
 6. The `.github/workflows/release.yml` tag workflow builds the clean commit,
    downloads and checksum-verifies Node 16.19.0 from nodejs.org, and publishes
    the release archive plus its checksum.

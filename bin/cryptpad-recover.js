@@ -10,9 +10,10 @@ const readline = require('readline');
 const {
     recoverAccount,
     enumerateDrive,
-    recoverCodeDocument,
+    recoverDocument,
     recoverUploadedFile,
 } = require('../src/recovery');
+const { exportDocument } = require('../src/exporters');
 const { SupportLog, errorCode } = require('../src/support-log');
 
 const DEFAULT_DATA_ROOT = '/embassy-data/package-data/volumes/cryptpad/data';
@@ -136,6 +137,33 @@ function safeOutputPath(root, logicalPath) {
         throw Object.assign(new Error('Recovered item resolved outside the output directory'), { code: 'UNSAFE_OUTPUT_PATH' });
     }
     return output;
+}
+
+function appendSuffix(logicalPath, suffix) {
+    if (!suffix) return logicalPath;
+    if (logicalPath.toLowerCase().endsWith(suffix.toLowerCase()) && suffix !== '.cryptpad.json') {
+        return logicalPath;
+    }
+    return `${logicalPath}${suffix}`;
+}
+
+function writeDocumentExports(filesRoot, entry, exports) {
+    const targets = exports.map((item) => ({
+        ...item,
+        output: safeOutputPath(filesRoot, appendSuffix(entry.path, item.suffix)),
+    }));
+    targets.forEach((target) => {
+        if (fs.existsSync(target.output)) {
+            throw Object.assign(new Error('A recovered output destination already exists'), {
+                code: 'OUTPUT_ALREADY_EXISTS',
+            });
+        }
+    });
+    targets.forEach((target) => {
+        fs.mkdirSync(path.dirname(target.output), { recursive: true, mode: 0o700 });
+        fs.writeFileSync(target.output, target.content, { flag: 'wx', mode: 0o600 });
+    });
+    return targets;
 }
 
 function inspectDataRoot(dataRoot) {
@@ -286,35 +314,50 @@ async function main() {
 
             try {
                 let recovered;
-                if (entry.type === 'code') {
-                    recovered = recoverCodeDocument(dataRoot, entry);
-                } else if (entry.type === 'file') {
+                if (entry.type === 'file') {
                     recovered = recoverUploadedFile(dataRoot, entry);
                 } else {
-                    skippedCount += 1;
-                    log.event('item.recover', {
-                        stage: 'finish', itemId, type: entry.type, outcome: 'skipped', reason: 'unsupported-type',
-                    });
-                    process.stdout.write(`[${index + 1}/${entries.length}] Skipped unsupported ${entry.type} item.\n`);
-                    continue;
+                    recovered = recoverDocument(dataRoot, entry);
                 }
 
                 log.addSensitive(recovered.secret && recovered.secret.channel);
-                const output = safeOutputPath(filesRoot, entry.path);
-                fs.mkdirSync(path.dirname(output), { recursive: true, mode: 0o700 });
-                const content = entry.type === 'code' ? Buffer.from(recovered.content) : recovered.content;
-                fs.writeFileSync(output, content, { flag: 'wx', mode: 0o600 });
+                let outputCount;
+                let totalBytes;
+                let formats;
+                if (entry.type === 'file') {
+                    const output = safeOutputPath(filesRoot, entry.path);
+                    fs.mkdirSync(path.dirname(output), { recursive: true, mode: 0o700 });
+                    fs.writeFileSync(output, recovered.content, { flag: 'wx', mode: 0o600 });
+                    outputCount = 1;
+                    totalBytes = recovered.content.length;
+                    formats = ['uploaded-file'];
+                } else {
+                    if (recovered.onlyOfficeHistory) {
+                        log.addSensitive(recovered.onlyOfficeHistory.channel);
+                        log.addSensitive(recovered.onlyOfficeHistory.file);
+                    }
+                    const documentExports = exportDocument(entry.type, recovered.state, {
+                        onlyOfficeHistory: recovered.onlyOfficeHistory,
+                    });
+                    const written = writeDocumentExports(filesRoot, entry, documentExports);
+                    outputCount = written.length;
+                    totalBytes = written.reduce((sum, item) => sum + item.content.length, 0);
+                    formats = written.map((item) => item.format);
+                }
                 recoveredCount += 1;
                 log.event('item.recover', {
                     stage: 'finish',
                     itemId,
                     type: entry.type,
                     outcome: 'success',
-                    bytes: content.length,
+                    outputCount,
+                    bytes: totalBytes,
+                    formats,
                     verifiedMessages: recovered.replay && recovered.replay.messageCount,
+                    verifiedSecondaryMessages: recovered.onlyOfficeHistory && recovered.onlyOfficeHistory.messageCount,
                     verifiedChunks: recovered.chunkCount,
                 });
-                process.stdout.write(`[${index + 1}/${entries.length}] Recovered ${entry.type} item.\n`);
+                process.stdout.write(`[${index + 1}/${entries.length}] Recovered ${entry.type} item (${outputCount} output file${outputCount === 1 ? '' : 's'}).\n`);
             } catch (error) {
                 failedCount += 1;
                 log.error('item.recover', error, { stage: 'finish', itemId, type: entry.type });

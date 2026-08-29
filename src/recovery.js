@@ -92,17 +92,47 @@ function readHistoryMessages(file, channel) {
     return messages;
 }
 
-function replayChannel(dataRoot, secret, options = {}) {
-    const json = Boolean(options.json);
-    const initialState = json ? '{}' : '';
-    const file = historyPath(dataRoot, secret.channel);
+function decryptHistoryMessages(dataRoot, secret, channel = secret.channel) {
+    const file = historyPath(dataRoot, channel);
     if (!fs.existsSync(file)) throw new Error(`Missing channel history: ${file}`);
-    if (!secret.keys || !secret.keys.cryptKey) throw new Error(`No decryption key for channel ${secret.channel}`);
-
+    if (!secret.keys || !secret.keys.cryptKey) throw new Error(`No decryption key for channel ${channel}`);
     const cryptor = Crypto.createEncryptor(secret.keys);
+    const records = readHistoryMessages(file, channel);
+    return {
+        channel,
+        file,
+        messages: records.map((record) => {
+            const ciphertext = removeCheckpointPrefix(record.ciphertext);
+            let plaintext;
+            try {
+                plaintext = cryptor.decrypt(ciphertext, secret.keys.validateKey, false);
+            } catch (err) {
+                throw new Error(`${file}:${record.line}: message authentication failed: ${err.message}`);
+            }
+            if (typeof plaintext !== 'string') {
+                throw new Error(`${file}:${record.line}: message signature verification failed`);
+            }
+            return {
+                plaintext,
+                timestamp: record.timestamp,
+                line: record.line,
+            };
+        }),
+    };
+}
+
+function replayChannel(dataRoot, secret, options = {}) {
+    const transformer = options.transformer || (options.json ? 'smart' : 'text');
+    if (!['text', 'smart', 'naive'].includes(transformer)) {
+        throw new Error(`Unsupported replay transformer: ${transformer}`);
+    }
+    const json = transformer !== 'text';
+    const initialState = options.initialState === undefined ? '' : options.initialState;
     const config = { initialState, logLevel: 0 };
     if (json) {
-        config.patchTransformer = ChainPad.SmartJSONTransformer;
+        config.patchTransformer = transformer === 'smart'
+            ? ChainPad.SmartJSONTransformer
+            : ChainPad.NaiveJSONTransformer;
         config.validateContent = (content) => {
             try {
                 JSON.parse(content);
@@ -113,23 +143,12 @@ function replayChannel(dataRoot, secret, options = {}) {
         };
     }
     const realtime = ChainPad.create(config);
-    const records = readHistoryMessages(file, secret.channel);
+    const decrypted = decryptHistoryMessages(dataRoot, secret);
+    const file = decrypted.file;
     let verified = 0;
 
-    records.forEach((record) => {
-        const ciphertext = removeCheckpointPrefix(record.ciphertext);
-        let plaintext;
-        try {
-            // Unlike the browser history path, offline recovery verifies the
-            // attached Ed25519 signature as well as the secretbox authenticator.
-            plaintext = cryptor.decrypt(ciphertext, secret.keys.validateKey, false);
-        } catch (err) {
-            throw new Error(`${file}:${record.line}: message authentication failed: ${err.message}`);
-        }
-        if (typeof plaintext !== 'string') {
-            throw new Error(`${file}:${record.line}: message signature verification failed`);
-        }
-        realtime.message(removeLegacyBencode(plaintext));
+    decrypted.messages.forEach((record) => {
+        realtime.message(removeLegacyBencode(record.plaintext));
         verified += 1;
     });
 
@@ -137,6 +156,7 @@ function replayChannel(dataRoot, secret, options = {}) {
         channel: secret.channel,
         file,
         messageCount: verified,
+        transformer,
         document: realtime.getUserDoc(),
     };
 }
@@ -159,7 +179,10 @@ async function recoverAccount(dataRoot, username, password) {
         }
 
         const driveSecret = Hash.getSecrets('pad', block.User_hash);
-        const replay = replayChannel(dataRoot, driveSecret, { json: true });
+        const replay = replayChannel(dataRoot, driveSecret, {
+            transformer: 'smart',
+            initialState: '{}',
+        });
         let accountDocument;
         try {
             accountDocument = JSON.parse(replay.document);
@@ -248,6 +271,61 @@ function enumerateDrive(accountDocument) {
 
 function recoverCodeDocument(dataRoot, entry) {
     if (!entry || entry.type !== 'code') throw new Error('Entry is not a Code document');
+    const recovered = recoverDocument(dataRoot, entry);
+    if (typeof recovered.state.content !== 'string') {
+        throw new Error(`Code state has no text content: ${entry.path}`);
+    }
+    return { ...recovered, content: recovered.state.content };
+}
+
+function documentTransformer(type) {
+    if (type === 'pad' || type === 'whiteboard') return 'naive';
+    // sframe-app-framework defaults to SmartJSONTransformer for Code, Slide,
+    // Kanban, Form, and OnlyOffice apps. Poll/calendar use listmap, which also
+    // uses SmartJSONTransformer but starts from an explicit empty object.
+    return 'smart';
+}
+
+function documentInitialState(type) {
+    if (type === 'poll' || type === 'calendar') return '{}';
+    return '';
+}
+
+function recoverOnlyOfficeHistory(dataRoot, secret, state, type) {
+    if (!['sheet', 'doc', 'presentation'].includes(type)) return null;
+    const channel = state && state.content && state.content.channel;
+    if (typeof channel !== 'string' || !channel) return null;
+
+    // sframe-common-outer.js and common/outer/onlyoffice.js load this random
+    // secondary channel using the primary document's encryption/signing keys.
+    const decrypted = decryptHistoryMessages(dataRoot, secret, channel);
+    const messages = decrypted.messages.map((record) => {
+        const plaintext = removeLegacyBencode(record.plaintext);
+        try {
+            JSON.parse(plaintext);
+        } catch (err) {
+            const error = new Error(`OnlyOffice history message is not valid JSON at record ${record.line}: ${err.message}`);
+            error.code = 'INVALID_ONLYOFFICE_HISTORY';
+            throw error;
+        }
+        return {
+            timestamp: record.timestamp,
+            // Keep the authenticated plaintext byte-for-byte instead of
+            // reserializing it. OnlyOffice change strings are opaque binary
+            // patches encoded inside this JSON message.
+            plaintext,
+        };
+    });
+    return {
+        channel,
+        file: decrypted.file,
+        messageCount: messages.length,
+        messages,
+    };
+}
+
+function recoverDocument(dataRoot, entry) {
+    if (!entry || entry.type === 'file') throw new Error('Entry is not a document');
     const href = entry.item.href || entry.item.roHref;
     const parsed = Hash.parsePadUrl(href);
     if (!parsed || !parsed.hash) throw new Error(`Invalid document capability for ${entry.path}`);
@@ -255,15 +333,19 @@ function recoverCodeDocument(dataRoot, entry) {
     if (entry.channel && secret.channel !== entry.channel) {
         throw new Error(`Derived channel does not match drive metadata for ${entry.path}`);
     }
-    const replay = replayChannel(dataRoot, secret, { json: false });
+    const transformer = documentTransformer(parsed.type);
+    const replay = replayChannel(dataRoot, secret, {
+        transformer,
+        initialState: documentInitialState(parsed.type),
+    });
     let state;
     try {
         state = JSON.parse(replay.document);
     } catch (err) {
-        throw new Error(`Replayed Code state is not valid JSON for ${entry.path}: ${err.message}`);
+        throw new Error(`Replayed ${entry.type} state is not valid JSON for ${entry.path}: ${err.message}`);
     }
-    if (typeof state.content !== 'string') throw new Error(`Code state has no text content: ${entry.path}`);
-    return { entry, secret, replay, state, content: state.content };
+    const onlyOfficeHistory = recoverOnlyOfficeHistory(dataRoot, secret, state, parsed.type);
+    return { entry, secret, replay, state, transformer, onlyOfficeHistory };
 }
 
 function incrementFileNonce(nonce) {
@@ -347,9 +429,14 @@ module.exports = {
     allocateBlockKeys,
     locateBlock,
     decryptAccountBlock,
+    decryptHistoryMessages,
     replayChannel,
     recoverAccount,
     enumerateDrive,
+    documentTransformer,
+    documentInitialState,
+    recoverOnlyOfficeHistory,
+    recoverDocument,
     recoverCodeDocument,
     recoverUploadedFile,
 };
