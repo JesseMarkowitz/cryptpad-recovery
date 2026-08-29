@@ -1036,6 +1036,9 @@ records which one (if any) was auto-selected in the support log as
 `dataRootDefaultLabel` for diagnosability. `--data` still overrides
 auto-detection entirely and skips the probe.
 
-Not yet done: an actual recovery run against real account data on the
-upgraded 0.4.0.1 host. This section only establishes where the data lives
-now, not that recovery still completes successfully against it end to end.
+Re-verification: the v0.3.2 release archive was run with no `--data` flag
+against the same real account on the same test server, now upgraded to
+StartOS 0.4.0.1. All 5 drive items recovered with 0 failed and 0 skipped —
+the same result as the v0.3.1 run on 0.3.5.1 — confirming auto-detection
+found the relocated volume and the StartOS upgrade itself did not otherwise
+change anything CryptPad-recovery-relevant.
