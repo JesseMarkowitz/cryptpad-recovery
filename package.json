@@ -1,0 +1,16 @@
+{
+  "name": "cryptpad-recovery",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Offline CryptPad 5.1.0 recovery utility for StartOS 0.3.5.1",
+  "bin": {
+    "cryptpad-recover": "bin/cryptpad-recover.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "build:release": "scripts/build-release.sh"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

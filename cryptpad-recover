@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+BUNDLE_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+if [ -f "$BUNDLE_ROOT/MANIFEST.sha256" ]; then
+    if ! (cd "$BUNDLE_ROOT" && sha256sum -c MANIFEST.sha256 >/dev/null); then
+        echo "Bundle integrity verification failed. Download a fresh release before continuing." >&2
+        exit 1
+    fi
+fi
+
+if [ -x "$BUNDLE_ROOT/runtime/bin/node" ]; then
+    NODE_EXECUTABLE="$BUNDLE_ROOT/runtime/bin/node"
+elif command -v node >/dev/null 2>&1; then
+    NODE_EXECUTABLE=$(command -v node)
+else
+    echo "The bundled Node runtime is missing and no system Node executable was found." >&2
+    echo "Use the linux-x64 release archive, not the GitHub source archive." >&2
+    exit 1
+fi
+
+exec "$NODE_EXECUTABLE" "$BUNDLE_ROOT/app/bin/cryptpad-recover.js" "$@"

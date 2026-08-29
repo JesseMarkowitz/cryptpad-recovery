@@ -1,0 +1,6 @@
+use-tor-instead-of-lan: false
+admin-public-key: null
+admin-email: null
+tor-address: dy4sld6zjzvtegayzrpkrwjoj35nca4s7xhrjpmvl64bvt4aadiwswyd.onion
+lan-address: dy4sld6zjzvtegayzrpkrwjoj35nca4s7xhrjpmvl64bvt4aadiwswyd.local
+sandbox-tor-address: 2wflg5xqo6bwi2majkxhfwaw5bpbbn42n65l7xrpgrjrqpwuzjs2loyd.onion

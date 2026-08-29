@@ -1,0 +1,3 @@
+CRYPTPAD-RECOVERY-CANARY-01
+The quick brown fox jumps over the lazy dog.
+Line endings: LF

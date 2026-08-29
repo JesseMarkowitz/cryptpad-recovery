@@ -328,6 +328,18 @@ Investigate/recover additional CryptPad document types.
 
 Only after the underlying recovery path is proven, turn the proof-of-concept into the standalone user-facing utility.
 
+The agreed deployment is **not** an `.s9pk` and not a long-running StartOS
+service. It is a self-contained Linux x64 release bundle downloaded from GitHub
+after the user connects to StartOS over SSH. The bundle must include its own
+runtime, prompt for username and password, recover into a separate directory,
+create an archive and checksum that are easy to copy off the server with
+`scp`, and generate a detailed privacy-safe support log.
+
+The support log must contain enough build, environment, stage, verification,
+count, timing, and sanitized error information for remote diagnosis. It must
+not contain passwords, usernames, actual user filenames, file data, absolute
+source/output paths, CryptPad capabilities or keys, or storage identifiers.
+
 ## Validation
 
 For every recovery mechanism:

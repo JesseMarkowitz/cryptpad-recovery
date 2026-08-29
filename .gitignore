@@ -1,0 +1,5 @@
+/dist/
+/.cache/
+cryptpad-recovery-*/
+cryptpad-recovery-*.tar.gz
+cryptpad-recovery-*.tar.gz.sha256

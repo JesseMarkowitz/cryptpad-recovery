@@ -1,0 +1,3 @@
+["INFO","2026-08-28T21:04:41.667Z","UPDATING_FRESH_KEY",1787951081667]
+["INFO","2026-08-28T21:04:41.969Z","SERVER_TELEMETRY",{"version":"5.1.0","installMethod":"docker-alpine","httpUnsafeOrigin":"https://dy4sld6zjzvtegayzrpkrwjoj35nca4s7xhrjpmvl64bvt4aadiwswyd.local","httpSafeOrigin":"https://2wflg5xqo6bwi2majkxhfwaw5bpbbn42n65l7xrpgrjrqpwuzjs2loyd.local","consentToContact":false}]
+["INFO","2026-08-28T21:04:42.491Z","AN_UPDATE_IS_AVAILABLE",{"version":"2025.6.0"}]

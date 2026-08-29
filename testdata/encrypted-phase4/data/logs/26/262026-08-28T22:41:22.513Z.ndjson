@@ -1,0 +1,4 @@
+["INFO","2026-08-28T22:41:22.564Z","UPDATING_FRESH_KEY",1787956882564]
+["INFO","2026-08-28T22:41:22.672Z","SERVER_TELEMETRY",{"version":"5.1.0","installMethod":"docker-alpine","httpUnsafeOrigin":"https://dy4sld6zjzvtegayzrpkrwjoj35nca4s7xhrjpmvl64bvt4aadiwswyd.local","httpSafeOrigin":"https://2wflg5xqo6bwi2majkxhfwaw5bpbbn42n65l7xrpgrjrqpwuzjs2loyd.local","consentToContact":false}]
+["INFO","2026-08-28T22:41:23.168Z","AN_UPDATE_IS_AVAILABLE",{"version":"2025.6.0"}]
+["INFO","2026-08-29T01:19:43.055Z","BLOCK_WRITE_BY_OWNER",{"safeKey":"cH0fAEA6AgWMChk-jDWW9mGHj8W1L+RWIdHB2sCwYd0=","blockId":"cH0fAEA6AgWMChk/jDWW9mGHj8W1L+RWIdHB2sCwYd0=","isChange":false}]
