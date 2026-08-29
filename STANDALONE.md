@@ -128,22 +128,29 @@ damaged/archive histories remain under development.
 ## Copying files off the server
 
 Run these from a terminal on the computer that should receive the files, not
-on the StartOS server. Replace `YOUR_STARTOS_HOST` with the same hostname or
-address used for SSH, and `ARCHIVE_PATH`/`LOG_PATH` with the exact paths the
-utility printed after `Recovered-files archive:` and `Support log:`:
+on the StartOS server. Set `STARTOS_HOST` to the same hostname or address
+used for SSH, and `ARCHIVE_PATH`/`LOG_PATH` to the exact paths the utility
+printed after `Recovered-files archive:` and `Support log:`. The three `scp`
+commands below mirror exactly what the utility itself prints at the end of a
+run, with the real paths already filled in and only the host left for you to
+substitute; the final checksum-verification line is not printed by the
+utility, so run it yourself after copying:
 
 ```sh
+STARTOS_HOST=YOUR_STARTOS_HOST
 ARCHIVE_PATH="/home/start9/.../cryptpad-recovery-<timestamp>-<suffix>.tar.gz"
+ARCHIVE_FILE="$(basename "$ARCHIVE_PATH")"
 LOG_PATH="/home/start9/.../cryptpad-recovery-<timestamp>-<suffix>/support-log.jsonl"
 
-scp "start9@YOUR_STARTOS_HOST:$ARCHIVE_PATH" .
-scp "start9@YOUR_STARTOS_HOST:$ARCHIVE_PATH.sha256" .
-scp "start9@YOUR_STARTOS_HOST:$LOG_PATH" .
+scp "start9@$STARTOS_HOST:$ARCHIVE_PATH" .
+scp "start9@$STARTOS_HOST:$ARCHIVE_PATH.sha256" .
+scp "start9@$STARTOS_HOST:$LOG_PATH" .
 
-sha256sum -c "$(basename "$ARCHIVE_PATH").sha256"
+sha256sum -c "$ARCHIVE_FILE.sha256"
 ```
 
-The utility never prints these three commands pre-filled with real credentials
-or contents — only the paths above are session-specific. It is safe to send
-`support-log.jsonl` for diagnostics; never send the `.tar.gz` archive, since it
-contains recovered private data.
+`ARCHIVE_FILE` exists because `scp` lands the file under its bare name in the
+current directory, while `ARCHIVE_PATH` is the full remote path; `sha256sum
+-c` needs the bare name to find it locally. It is safe to send
+`support-log.jsonl` for diagnostics; never send the `.tar.gz` archive, since
+it contains recovered private data.
