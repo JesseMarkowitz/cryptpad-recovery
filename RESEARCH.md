@@ -999,3 +999,7 @@ deterministic across repeated recovery runs of the same account snapshot.
 Covered by a synthetic-drive unit test; the live Phase 6 fixture set has no
 duplicate titles to exercise this against, so it is not covered by an
 encrypted fixture.
+
+Re-verification: the v0.3.1 release archive was run against the same account
+on the same test server. All 5 drive items recovered, including both
+same-titled Pads, with 0 failed and 0 skipped.
