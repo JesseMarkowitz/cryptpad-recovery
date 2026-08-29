@@ -15,7 +15,7 @@ SSH into the StartOS server, then download a named release archive and its
 checksum from this project's GitHub Releases page:
 
 ```sh
-RELEASE=v0.3.0
+RELEASE=v0.3.1
 ASSET="cryptpad-recovery-${RELEASE#v}-linux-x64.tar.gz"
 BASE_URL="https://github.com/JesseMarkowitz/cryptpad-recovery/releases/download"
 curl -fLO "$BASE_URL/$RELEASE/$ASSET"

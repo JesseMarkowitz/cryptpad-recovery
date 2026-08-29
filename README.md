@@ -169,9 +169,14 @@ remaining recovery limitations are:
   Form, Calendar, Document, and Presentation currently have source-level and
   unit-test coverage but not live UI fixtures;
 - damaged/truncated histories and archive fallback need explicit recovery
-  policies and diagnostics; and
-- the broader Phase 6 bundle still needs final target-host acceptance after it
-  is committed and published as a release.
+  policies and diagnostics.
+
+The Phase 6 bundle passed target-host acceptance against a real account on a
+StartOS 0.3.5.1 test server (v0.3.0). That run surfaced one real defect fixed
+in v0.3.1: two drive items sharing an identical title collided on the same
+recovery output path, and the second failed with `OUTPUT_ALREADY_EXISTS`.
+`enumerateDrive` now disambiguates every group of same-path items by their
+stable drive element id.
 
 `RESEARCH.md` contains the full source and cryptographic analysis. Shared-folder,
 team, archive, and damaged-history recovery remain later engineering stages.

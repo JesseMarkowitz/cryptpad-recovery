@@ -978,3 +978,24 @@ Kanban content, and authenticated preservation of a real Sheet secondary edit
 history. Live UI fixtures for Poll, Whiteboard, Form, Calendar, Document, and
 Presentation remain future coverage work even though their replay/raw export
 paths are implemented from the verified 5.1.0 source behavior.
+
+## 15. v0.3.0 target-host acceptance and the duplicate-title defect
+
+Validation date: 2026-08-29. The v0.3.0 release archive was run against a real
+account's live data on a StartOS 0.3.5.1 test server (`shoddy-cradles`). Of 5
+drive items, 4 recovered; item 2, a Pad, failed with `OUTPUT_ALREADY_EXISTS`.
+
+Cause: `enumerateDrive` derived each item's recovery output path from its
+CryptPad title alone. CryptPad does not enforce title uniqueness within a
+drive folder, so the account held two items with an identical title. The
+second item to be written collided with the first item's already-written
+output file.
+
+Fix: `enumerateDrive` now groups items by their computed path after the drive
+and trash walks and, for every group with more than one member, appends
+` (<element id>)` to every member but the lowest-id one. The element id is
+CryptPad's own stable per-item drive slot number, so the disambiguated path is
+deterministic across repeated recovery runs of the same account snapshot.
+Covered by a synthetic-drive unit test; the live Phase 6 fixture set has no
+duplicate titles to exercise this against, so it is not covered by an
+encrypted fixture.

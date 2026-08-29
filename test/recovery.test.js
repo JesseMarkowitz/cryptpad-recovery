@@ -31,6 +31,24 @@ test('application replay modes match the CryptPad 5.1.0 frameworks', () => {
     assert.strictEqual(documentInitialState('sheet'), '');
 });
 
+test('enumerateDrive disambiguates duplicate drive titles', () => {
+    const accountDocument = {
+        drive: {
+            filesData: {
+                10: { title: 'Untitled', uploaded: true, channel: 'chan-a' },
+                5: { title: 'Untitled', uploaded: true, channel: 'chan-b' },
+                7: { title: 'Unique', uploaded: true, channel: 'chan-c' },
+            },
+            root: { slotA: 10, slotB: 5, slotC: 7 },
+        },
+    };
+    const entries = enumerateDrive(accountDocument);
+    const byId = new Map(entries.map((entry) => [entry.id, entry.path]));
+    assert.strictEqual(byId.get('5'), 'Untitled');
+    assert.strictEqual(byId.get('10'), 'Untitled (10)');
+    assert.strictEqual(byId.get('7'), 'Unique');
+});
+
 test('offline account, drive, and Code recovery', { skip: !process.env.CRYPTPAD_TEST_PASSWORD }, async () => {
     const account = await recoverAccount(DATA_ROOT, USERNAME, process.env.CRYPTPAD_TEST_PASSWORD);
     assert.strictEqual(account.block.User_name, USERNAME);

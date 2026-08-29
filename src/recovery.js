@@ -266,7 +266,31 @@ function enumerateDrive(accountDocument) {
             }
         });
     });
+    deduplicatePaths(items);
     return items.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+// CryptPad drive titles are not unique: two sibling items (or an item and a
+// trashed item sharing a folder name) can carry the same title, which would
+// otherwise collide on the same recovery output path. Disambiguate every
+// group of colliding paths by the item's stable element id, keeping output
+// paths deterministic across repeated recovery runs of the same account.
+function deduplicatePaths(items) {
+    const groups = new Map();
+    items.forEach((item) => {
+        if (!groups.has(item.path)) groups.set(item.path, []);
+        groups.get(item.path).push(item);
+    });
+    groups.forEach((group) => {
+        if (group.length < 2) return;
+        group
+            .slice()
+            .sort((a, b) => Number(a.id) - Number(b.id))
+            .forEach((item, index) => {
+                if (index === 0) return;
+                item.path = `${item.path} (${item.id})`;
+            });
+    });
 }
 
 function recoverCodeDocument(dataRoot, entry) {
