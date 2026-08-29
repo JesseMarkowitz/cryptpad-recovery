@@ -68,9 +68,9 @@ On completion the utility prints paths to:
 - the archive's `.sha256` checksum; and
 - `support-log.jsonl`, a separate diagnostic log.
 
-It also prints ready-to-adapt `scp` commands. Run those commands from a terminal
-on the computer that should receive the files, after replacing
-`YOUR_STARTOS_HOST` with the same hostname or address used for SSH.
+It also prints ready-to-adapt `scp` commands using the exact paths for that
+session; see [Copying files off the server](#copying-files-off-the-server)
+below for the general form.
 
 Verify the copied recovery archive:
 
@@ -118,3 +118,26 @@ binary change records. Recovery authenticates and preserves those records in
 `.pptx`. Form, Calendar, and other replayable applications currently receive
 raw-state exports. Shared folders, teams, legacy account fallback, and
 damaged/archive histories remain under development.
+
+## Copying files off the server
+
+Run these from a terminal on the computer that should receive the files, not
+on the StartOS server. Replace `YOUR_STARTOS_HOST` with the same hostname or
+address used for SSH, and `ARCHIVE_PATH`/`LOG_PATH` with the exact paths the
+utility printed after `Recovered-files archive:` and `Support log:`:
+
+```sh
+ARCHIVE_PATH="/home/start9/.../cryptpad-recovery-<timestamp>-<suffix>.tar.gz"
+LOG_PATH="/home/start9/.../cryptpad-recovery-<timestamp>-<suffix>/support-log.jsonl"
+
+scp "start9@YOUR_STARTOS_HOST:$ARCHIVE_PATH" .
+scp "start9@YOUR_STARTOS_HOST:$ARCHIVE_PATH.sha256" .
+scp "start9@YOUR_STARTOS_HOST:$LOG_PATH" .
+
+sha256sum -c "$(basename "$ARCHIVE_PATH").sha256"
+```
+
+The utility never prints these three commands pre-filled with real credentials
+or contents — only the paths above are session-specific. It is safe to send
+`support-log.jsonl` for diagnostics; never send the `.tar.gz` archive, since it
+contains recovered private data.
