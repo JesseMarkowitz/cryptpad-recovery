@@ -129,18 +129,19 @@ damaged/archive histories remain under development.
 
 Run these from a terminal on the computer that should receive the files, not
 on the StartOS server. Set `STARTOS_HOST` to the same hostname or address
-used for SSH, and `ARCHIVE_PATH`/`LOG_PATH` to the exact paths the utility
-printed after `Recovered-files archive:` and `Support log:`. The three `scp`
-commands below mirror exactly what the utility itself prints at the end of a
-run, with the real paths already filled in and only the host left for you to
-substitute; the final checksum-verification line is not printed by the
-utility, so run it yourself after copying:
+used for SSH, then replace the two `REPLACE_WITH_...` placeholders below with
+the exact paths the utility printed after `Recovered-files archive:` and
+`Support log:` — paste those two lines verbatim; do not abbreviate or
+paraphrase them. The three `scp` commands mirror exactly what the utility
+itself prints at the end of a run, with the real paths already filled in and
+only the host left for you to substitute; the final checksum-verification
+line is not printed by the utility, so run it yourself after copying:
 
 ```sh
 STARTOS_HOST=YOUR_STARTOS_HOST
-ARCHIVE_PATH="/home/start9/.../cryptpad-recovery-<timestamp>-<suffix>.tar.gz"
+ARCHIVE_PATH=REPLACE_WITH_THE_PRINTED_RECOVERED-FILES_ARCHIVE_PATH
 ARCHIVE_FILE="$(basename "$ARCHIVE_PATH")"
-LOG_PATH="/home/start9/.../cryptpad-recovery-<timestamp>-<suffix>/support-log.jsonl"
+LOG_PATH=REPLACE_WITH_THE_PRINTED_SUPPORT_LOG_PATH
 
 scp "start9@$STARTOS_HOST:$ARCHIVE_PATH" .
 scp "start9@$STARTOS_HOST:$ARCHIVE_PATH.sha256" .
@@ -148,6 +149,11 @@ scp "start9@$STARTOS_HOST:$LOG_PATH" .
 
 sha256sum -c "$ARCHIVE_FILE.sha256"
 ```
+
+A real `ARCHIVE_PATH` looks like
+`/home/start9/cryptpad-recovery-<version>-linux-x64/cryptpad-recovery-<timestamp>-<suffix>.tar.gz`
+— always copy it from the utility's own output rather than retyping it, since
+the directory you ran it from and the session suffix both vary per run.
 
 `ARCHIVE_FILE` exists because `scp` lands the file under its bare name in the
 current directory, while `ARCHIVE_PATH` is the full remote path; `sha256sum
