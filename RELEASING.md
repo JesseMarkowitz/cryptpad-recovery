@@ -15,8 +15,9 @@ not committed.
 6. The `.github/workflows/release.yml` tag workflow builds the clean commit,
    downloads and checksum-verifies Node 16.19.0 from nodejs.org, and publishes
    the release archive plus its checksum.
-7. Download the published assets using the exact commands in `STANDALONE.md`,
-   verify the checksum, and run one final StartOS acceptance test.
+7. Download the published assets using the exact commands in
+   `StandaloneSSHrecovery.md`, verify the checksum, and run one final
+   StartOS acceptance test.
 
 Do not upload a locally dirty build. `BUILD_INFO.json` in every bundle records
 the source commit, dirty flag, bundled runtime version, and verified upstream

@@ -33,7 +33,8 @@ tar -xzf "$ASSET"
 cd "${ASSET%.tar.gz}"
 ```
 
-The checksum command must report `OK`. Stop if it does not.
+The checksum command must report `OK`. Stop if it does not. At this point,
+you have downloaded the recovery tool and confirmed its SHA-256 checksum.
 
 ## Step 2: Run recovery — on the StartOS server
 
@@ -84,18 +85,46 @@ for Step 4:
 It also prints ready-to-adapt `scp` commands using the exact paths for that
 session, matching Step 3 below.
 
+**Example output** (yours will show your own username, item count, and
+paths — this is illustrative, not a template to copy):
+
+```text
+CryptPad username: alice
+CryptPad password:
+Found 5 drive items. Recovering supported items...
+[1/5] Recovered pad item (2 output files).
+[2/5] Recovered pad item (2 output files).
+[3/5] Recovered file item (1 output file).
+[4/5] Recovered file item (1 output file).
+[5/5] Recovered file item (1 output file).
+Recovery success: 5 recovered, 0 failed, 0 skipped.
+Support log: /home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3/support-log.jsonl
+Recovered-files archive: /home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3.tar.gz
+
+Copy the recovered-files archive from a terminal on your other computer:
+  scp start9@YOUR_STARTOS_HOST:"/home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3.tar.gz" .
+  scp start9@YOUR_STARTOS_HOST:"/home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3.tar.gz.sha256" .
+
+If support is needed, send only this diagnostic log (it contains no passwords, filenames, or file data):
+  scp start9@YOUR_STARTOS_HOST:"/home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3/support-log.jsonl" .
+
+Do not send the recovered-files archive for diagnostics; it contains recovered private data.
+```
+
 ## Step 3: Copy the recovered files to your local machine — on your local machine
 
 Open a **new terminal on the computer that should receive the files** — not
-the StartOS server you were just using. Set `STARTOS_HOST` to the same
-hostname or address you used for SSH, then replace the two
-`REPLACE_WITH_...` placeholders below with the exact paths the utility
-printed in Step 2 after `Recovered-files archive:` and `Support log:` —
-paste those two lines verbatim; do not abbreviate or paraphrase them. The
-three `scp` commands mirror exactly what the utility itself printed, with the
-real paths already filled in and only the host left for you to substitute;
-the final checksum-verification line is not printed by the utility, so run it
-yourself after copying:
+the StartOS server you were just using. Everything below runs on this local
+machine. Set `STARTOS_HOST` to the same hostname or address you used for
+SSH, then replace the two `REPLACE_WITH_...` placeholders with the exact
+paths the utility printed in Step 2 after `Recovered-files archive:` and
+`Support log:` — paste those two lines verbatim; do not abbreviate or
+paraphrase them. The `scp` commands then use `STARTOS_HOST`, `ARCHIVE_PATH`,
+and `LOG_PATH` to copy those files **from** the StartOS server **to** the
+current directory on this local machine — the same copy the utility's own
+printed commands in Step 2 do, just written with variables here instead of
+one fixed hostname. The final checksum-verification line is not printed by
+the utility at all; run it yourself after copying:
 
 ```sh
 STARTOS_HOST=YOUR_STARTOS_HOST
@@ -127,6 +156,9 @@ computer, since the archive contains your private recovered data:
 ```sh
 tar -xzf "$ARCHIVE_FILE"
 ```
+
+This command takes the archive file that was copied locally and extracts it
+to a newly created local directory called `recovered-files`.
 
 Keep this local copy — it's the only one you'll have once Step 4 removes the
 server's copy. It is safe to send `support-log.jsonl` to CryptPad support if
@@ -195,6 +227,11 @@ each line is one JSON object. If recovery fails or is incomplete, send only
 `support-log.jsonl` for diagnostics — never the recovered-files archive.
 
 ## Current format limitations
+
+Only Pad and uploaded-file recovery have been run against a real end-user
+account (see the disclaimer in `README.md`); everything else below is
+implemented and passes automated tests, but has not yet been proven outside
+test fixtures.
 
 This release recovers Code as text, Pad as safe HTML, Slide as Markdown,
 Kanban as JSON, Poll as CSV, Whiteboard as Fabric JSON, and uploaded files in

@@ -1,26 +1,37 @@
 # CryptPad recovery
 
-This workspace contains a verified offline recovery utility for the CryptPad
-5.1.0 package, target-host acceptance tested against a real account on a
-StartOS test server across both 0.3.5.1 and 0.4.0. The intended Phase 7
-deployment is a self-contained command-line bundle downloaded from GitHub
-and run over SSH. It is explicitly not an `.s9pk` or StartOS service.
+**This is a work-in-progress recovery utility only, provided as-is and used
+at your own risk.** It is not an official CryptPad or Start9 product.
+"Tested" here does not mean extensively tested: it has been run
+successfully once, end-to-end, against one real user's CryptPad account (5
+items, all recovered) on real StartOS servers running both 0.3.5.1 and
+0.4.0.1. That is one real-world data point, not broad validation — your
+data, document types, or CryptPad configuration may behave differently. The
+author takes no responsibility for data loss, corruption, incomplete
+recovery, or any other consequence of running this tool, and it is provided
+with no warranty of any kind, express or implied, including no warranty of
+merchantability or fitness for a particular purpose. Read
+[Current limitations](#current-limitations) before relying on it for
+anything you can't afford to lose.
+
+This is a self-contained command-line bundle downloaded from GitHub and run
+over SSH. It is explicitly not an `.s9pk` or StartOS service.
 
 The recovery utility can:
 
 - derive a registered account's login-block keys from username/password;
 - locate and authenticate/decrypt its account block;
 - derive, authenticate, decrypt, and replay its CryptDrive history;
-- enumerate ordinary and trashed entries from the logical drive tree;
-- authenticate and replay the application-specific histories used by Code,
-  Pad, Slide, Kanban, Poll, Whiteboard, Form, and OnlyOffice-backed documents;
-- create practical exports for Code (text), Pad (safe offline HTML), Slide
-  (Markdown), Kanban (JSON), Poll (CSV), and Whiteboard (Fabric JSON);
-- preserve every replayed document as a `.cryptpad.json` raw-state sidecar;
-- preserve authenticated secondary edit histories for Sheet, Document, and
-  Presentation as `.onlyoffice-history.json`; and
-- authenticate and recover uploaded files byte-for-byte, including multi-chunk
-  blobs.
+- enumerate the entries in the account's drive;
+- recover Pad documents as safe, offline HTML; and
+- recover uploaded files.
+
+Other CryptPad document types (Code, Slide, Kanban, Poll, Whiteboard, Sheet,
+Document, Presentation) are implemented and pass the automated test suite
+against real CryptPad-encrypted test fixtures, but have not yet been
+exercised against a real end-user account — see
+[Export formats](#export-formats) below for exactly what's implemented
+versus what's only been validated in the one real run so far.
 
 It does not contact CryptPad or any outside service during recovery. It reads
 an encrypted data snapshot from disk and writes only to an explicitly requested
@@ -28,19 +39,10 @@ output directory.
 
 ## Standalone SSH usage
 
-Tagged GitHub releases build a Linux x64 archive containing the recovery code,
-the exact historical CryptPad dependencies, and Node.js 16.19.0. After
-downloading and verifying that archive on StartOS, recovery is started with:
+To recover files using SSH, follow the instructions in
+[`StandaloneSSHrecovery.md`](StandaloneSSHrecovery.md). It contains detailed
+download, recovery, copy-out, cleanup, and support procedures.
 
-```sh
-./cryptpad-recover
-```
-
-The program prompts for both the CryptPad username and password. It writes a
-timestamped output directory, a separate privacy-safe `support-log.jsonl`, and
-a `.tar.gz` archive plus checksum for copying off the server with `scp`.
-Detailed download, recovery, copy-out, cleanup, and support procedures are in
-[`STANDALONE.md`](STANDALONE.md).
 Maintainer release steps are in [`RELEASING.md`](RELEASING.md).
 
 ## Development usage
@@ -107,7 +109,8 @@ node --test test/recovery.test.js
 unset CRYPTPAD_TEST_PASSWORD
 ```
 
-The tests prove:
+These are automated tests against real CryptPad-encrypted fixture data — not
+a real end-user account. They prove:
 
 - modern account-block authentication and decryption;
 - signature and secretbox verification for every replayed drive/pad message;
@@ -121,17 +124,31 @@ The tests prove:
 
 ## Export formats
 
+Only Pad and uploaded-file recovery have been run against a real end-user
+CryptPad account (see the disclaimer at the top of this file). Everything
+in the second table below is implemented and passes the automated test
+suite described in [Validation](#validation) against real
+CryptPad-encrypted test fixtures, but has not yet been exercised on real
+account data.
+
+### Tested against a real account
+
+| CryptPad type | Primary recovery output | Additional preservation |
+|---|---|---|
+| Pad | sanitized, offline-safe HTML | `.cryptpad.json` HyperJSON state |
+| Uploaded file | original bytes | — |
+
+### Implemented, not yet tested against a real account
+
 | CryptPad type | Primary recovery output | Additional preservation |
 |---|---|---|
 | Code | original text | `.cryptpad.json` |
-| Pad | sanitized, offline-safe HTML | `.cryptpad.json` HyperJSON state |
 | Slide | Markdown | `.cryptpad.json` |
 | Kanban | board JSON | `.cryptpad.json` |
 | Poll | CSV | `.cryptpad.json` |
 | Whiteboard | Fabric canvas JSON | `.cryptpad.json` |
 | Sheet, Document, Presentation | raw CryptPad state | authenticated `.onlyoffice-history.json` edit stream when present |
 | Form, Calendar, and other replayable apps | raw `.cryptpad.json` state | — |
-| Uploaded file | original bytes | — |
 
 The raw sidecars are recovery artifacts, not guaranteed import formats. The
 OnlyOffice history is preserved without altering its opaque binary change
@@ -156,9 +173,12 @@ references in comments.
 
 ## Current limitations
 
-The standalone path is implemented for the currently supported formats. The
-remaining recovery limitations are:
+As of v0.3.2, known limitations:
 
+- only Pad and uploaded-file recovery have been exercised against a real
+  end-user account; every other document type is implemented and passes
+  automated tests but is otherwise unproven outside test fixtures (see
+  [Export formats](#export-formats));
 - only modern login blocks are implemented; legacy v1 account fallback and
   archived-block discovery are pending;
 - custom `loginSalt` overrides are not yet loaded from
@@ -166,27 +186,10 @@ remaining recovery limitations are:
 - shared folders and teams are not recursively loaded;
 - native `.xlsx`, `.docx`, and `.pptx` generation is not implemented; their
   authenticated OnlyOffice edit streams are preserved for future conversion;
-- Pad, Slide, Kanban, and Sheet have live encrypted fixtures; Poll, Whiteboard,
-  Form, Calendar, Document, and Presentation currently have source-level and
-  unit-test coverage but not live UI fixtures;
 - damaged/truncated histories and archive fallback need explicit recovery
   policies and diagnostics.
 
-The Phase 6 bundle passed target-host acceptance against a real account on a
-StartOS 0.3.5.1 test server (v0.3.0). That run surfaced one real defect fixed
-in v0.3.1: two drive items sharing an identical title collided on the same
-recovery output path, and the second failed with `OUTPUT_ALREADY_EXISTS`.
-`enumerateDrive` now disambiguates every group of same-path items by their
-stable drive element id.
-
-v0.3.2 adds StartOS 0.4.0 support: its CryptPad data volume moved from
-`/embassy-data/...` to `/media/startos/data/...`, confirmed by inspecting the
-0.4.0-upgraded test server's filesystem directly. The default data-root
-resolution now tries each known StartOS layout and uses whichever is
-actually present, so an upgraded host does not need `--data` passed
-manually. Re-run with no `--data` flag against the same real account on the
-same test server after its StartOS 0.3.5.1 → 0.4.0.1 upgrade: all 5 drive
-items recovered again, with 0 failed and 0 skipped.
-
-`RESEARCH.md` contains the full source and cryptographic analysis. Shared-folder,
-team, archive, and damaged-history recovery remain later engineering stages.
+`RESEARCH.md` contains the full source and cryptographic analysis, including
+the defects found and fixed during the v0.3.1 and v0.3.2 real-account
+acceptance runs. Shared-folder, team, archive, and damaged-history recovery
+remain later engineering stages.

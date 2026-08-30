@@ -1,9 +1,10 @@
 > **Status:** this is the original project brief, written before any research
 > or code existed. All seven phases described below are now complete and
 > released (`v0.3.2` as of this writing) — see `README.md` for what the tool
-> actually does today, `STANDALONE.md` for how to run it, and `RESEARCH.md`
-> for the research and validation record this brief asked for. Kept here
-> unmodified as the historical record of original scope and constraints.
+> actually does today, `StandaloneSSHrecovery.md` for how to run it, and
+> `RESEARCH.md` for the research and validation record this brief asked for.
+> Kept here unmodified as the historical record of original scope and
+> constraints. This file was itself originally named `background.md`.
 
 We are building a standalone CryptPad data-recovery utility for CryptPad installations running on StartOS 0.3.5.1.
 

@@ -65,7 +65,7 @@ cp "$REPOSITORY_ROOT/src/exporters.js" "$BUNDLE_ROOT/app/src/exporters.js"
 cp "$REPOSITORY_ROOT/src/support-log.js" "$BUNDLE_ROOT/app/src/support-log.js"
 cp "$REPOSITORY_ROOT/package.json" "$BUNDLE_ROOT/app/package.json"
 cp -R "$REPOSITORY_ROOT/vendor/." "$BUNDLE_ROOT/app/vendor/"
-cp "$REPOSITORY_ROOT/STANDALONE.md" "$BUNDLE_ROOT/README.txt"
+cp "$REPOSITORY_ROOT/StandaloneSSHrecovery.md" "$BUNDLE_ROOT/README.txt"
 cp "$TEMPORARY_DIRECTORY/$NODE_PACKAGE/bin/node" "$BUNDLE_ROOT/runtime/bin/node"
 cp "$TEMPORARY_DIRECTORY/$NODE_PACKAGE/LICENSE" "$BUNDLE_ROOT/runtime/NODE-LICENSE"
 
