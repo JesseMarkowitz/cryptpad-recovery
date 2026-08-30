@@ -1,6 +1,9 @@
-# CryptPad recovery research: StartOS 0.3.5.1
+# CryptPad recovery research: StartOS 0.3.5.1 and 0.4.0
 
-Research date: 2026-08-28
+Research date: 2026-08-28. Sections 15–16 extend this research to StartOS
+0.4.0 as of 2026-08-29; everything before that was written against 0.3.5.1
+only, which is still the version most of this document's live-verified
+claims describe.
 
 Post-reconnaissance fixture update: on 2026-08-28 a registered test account and
 three owned Code documents were created through the normal CryptPad 5.1.0
@@ -10,9 +13,11 @@ the Phase 1 observation before these fixtures were added.
 
 ## Status and evidence labels
 
-This document began as Phase 1 reconnaissance. Sections 12–14 record the later
-implemented and empirically validated recovery phases. Test-only CryptPad data
-was created through the normal browser UI; production data was not modified.
+This document began as Phase 1 reconnaissance. Sections 12–16 record the
+later implemented and empirically validated recovery phases, and the two
+StartOS-upgrade acceptance findings after release. Test-only CryptPad data
+was created through the normal browser UI; production data was not
+modified.
 
 The source-level recovery path is technically credible: the account password
 does not encrypt documents directly. It deterministically locates and decrypts

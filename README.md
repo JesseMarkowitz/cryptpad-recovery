@@ -39,7 +39,7 @@ downloading and verifying that archive on StartOS, recovery is started with:
 The program prompts for both the CryptPad username and password. It writes a
 timestamped output directory, a separate privacy-safe `support-log.jsonl`, and
 a `.tar.gz` archive plus checksum for copying off the server with `scp`.
-Detailed download, recovery, copy-out, and support procedures are in
+Detailed download, recovery, copy-out, cleanup, and support procedures are in
 [`STANDALONE.md`](STANDALONE.md).
 Maintainer release steps are in [`RELEASING.md`](RELEASING.md).
 
