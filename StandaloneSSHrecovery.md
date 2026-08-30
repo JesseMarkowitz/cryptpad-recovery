@@ -23,7 +23,7 @@ for:
 SSH into the StartOS server. Every command in this step runs there:
 
 ```sh
-RELEASE=v0.3.2
+RELEASE=v0.3.3
 ASSET="cryptpad-recovery-${RELEASE#v}-linux-x64.tar.gz"
 BASE_URL="https://github.com/JesseMarkowitz/cryptpad-recovery/releases/download"
 curl -fLO "$BASE_URL/$RELEASE/$ASSET"
@@ -98,15 +98,15 @@ Found 5 drive items. Recovering supported items...
 [4/5] Recovered file item (1 output file).
 [5/5] Recovered file item (1 output file).
 Recovery success: 5 recovered, 0 failed, 0 skipped.
-Support log: /home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3/support-log.jsonl
-Recovered-files archive: /home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3.tar.gz
+Support log: /home/start9/cryptpad-recovery-0.3.3-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3/support-log.jsonl
+Recovered-files archive: /home/start9/cryptpad-recovery-0.3.3-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3.tar.gz
 
 Copy the recovered-files archive from a terminal on your other computer:
-  scp start9@YOUR_STARTOS_HOST:"/home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3.tar.gz" .
-  scp start9@YOUR_STARTOS_HOST:"/home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3.tar.gz.sha256" .
+  scp start9@YOUR_STARTOS_HOST:"/home/start9/cryptpad-recovery-0.3.3-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3.tar.gz" .
+  scp start9@YOUR_STARTOS_HOST:"/home/start9/cryptpad-recovery-0.3.3-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3.tar.gz.sha256" .
 
 If support is needed, send only this diagnostic log (it contains no passwords, filenames, or file data):
-  scp start9@YOUR_STARTOS_HOST:"/home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3/support-log.jsonl" .
+  scp start9@YOUR_STARTOS_HOST:"/home/start9/cryptpad-recovery-0.3.3-linux-x64/cryptpad-recovery-20260830T140512Z-a1b2c3/support-log.jsonl" .
 
 Do not send the recovered-files archive for diagnostics; it contains recovered private data.
 ```
@@ -194,9 +194,9 @@ rm -rf "$SESSION_DIR" "$ARCHIVE_PATH" "$ARCHIVE_PATH.sha256"
 
 `SESSION_DIR` is the directory the archive was built from — it contains
 `recovered-files/` and `support-log.jsonl`. For example, if `ARCHIVE_PATH` is
-`/home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260829T232757Z-d3a3f0.tar.gz`,
+`/home/start9/cryptpad-recovery-0.3.3-linux-x64/cryptpad-recovery-20260829T232757Z-d3a3f0.tar.gz`,
 then `SESSION_DIR` is
-`/home/start9/cryptpad-recovery-0.3.2-linux-x64/cryptpad-recovery-20260829T232757Z-d3a3f0`.
+`/home/start9/cryptpad-recovery-0.3.3-linux-x64/cryptpad-recovery-20260829T232757Z-d3a3f0`.
 This only removes that one recovery session's output — it does not touch the
 downloaded release bundle (`cryptpad-recovery-<version>-linux-x64/` and its
 own `.tar.gz`) that Step 1 extracted, so `./cryptpad-recover` is still there
